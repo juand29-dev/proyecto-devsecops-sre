@@ -10,7 +10,7 @@ def get_db_connection():
         host=os.getenv("DB_HOST", "db"),
         port=int(os.getenv("DB_PORT", "3306")),
         user=os.getenv("DB_USER", "ejemplo"),
-        password=os.getenv("DB_PASSWORD"),
+        password="SuperPassword123",
         database=os.getenv("DB_NAME", "ejemplo"),
         connect_timeout=5
     )
