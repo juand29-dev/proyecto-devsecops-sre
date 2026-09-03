@@ -1,21 +1,56 @@
 from flask import Flask
+import os
+import pymysql
 
 app = Flask(__name__)
 
 
+def get_db_connection():
+    return pymysql.connect(
+        host=os.getenv("DB_HOST", "db"),
+        port=int(os.getenv("DB_PORT", "3306")),
+        user=os.getenv("DB_USER", "ejemplo"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME", "ejemplo"),
+        connect_timeout=5
+    )
+
+
 @app.route("/")
 def home():
-    return {
-        "status": "ok",
-        "message": "API DevSecOps funcionando"
-    }, 200
+    connection = get_db_connection()
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+
+        return {
+            "status": "ok",
+            "message": "API DevSecOps funcionando",
+            "database": "connected"
+        }, 200
+
+    finally:
+        connection.close()
 
 
 @app.route("/health")
 def health():
-    return {
-        "status": "healthy"
-    }, 200
+    connection = get_db_connection()
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+
+        return {
+            "status": "healthy",
+            "database": "connected"
+        }, 200
+
+    finally:
+        connection.close()
 
 
 if __name__ == "__main__":
