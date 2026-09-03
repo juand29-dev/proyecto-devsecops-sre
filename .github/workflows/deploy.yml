@@ -28,10 +28,49 @@ jobs:
       - name: Ejecutar pruebas
         run: pytest -v
 
+  bandit:
+    name: Análisis SAST con Bandit
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Instalar Bandit
+        run: pip install bandit
+
+      - name: Ejecutar Bandit
+        run: bandit -r app -ll
+
+  trivy:
+    name: Escaneo de imagen con Trivy
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Construir imagen
+        run: docker build -t devsecops-api:${{ github.sha }} .
+
+      - name: Escanear imagen con Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: devsecops-api:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
   deploy:
     name: Desplegar en EC2
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: test
+    needs:
+      - test
+      - bandit
+      - trivy
     runs-on: ubuntu-latest
 
     steps:
